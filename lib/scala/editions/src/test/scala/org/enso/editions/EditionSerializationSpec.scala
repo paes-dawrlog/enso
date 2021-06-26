@@ -80,19 +80,6 @@ class EditionSerializationSpec extends AnyWordSpec with Matchers with Inside {
       }
     }
 
-    "not allow invalid urls for repositories" in {
-      val parsed = EditionSerialization.parseYamlString(
-        """extends: foo
-          |repositories:
-          |- name: bar
-          |  url: baz
-          |""".stripMargin
-      )
-      inside(parsed) { case Failure(exception) =>
-        exception.getMessage should include("Cannot parse an URL")
-      }
-    }
-
     "not allow invalid version combinations for libraries" in {
       val parsed = EditionSerialization.parseYamlString(
         """extends: foo

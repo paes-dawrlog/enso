@@ -2,9 +2,6 @@ package org.enso.editions
 
 import nl.gn0s1s.bump.SemVer
 
-import java.net.URL
-import scala.util.Try
-
 /** Defines the general edition structure.
   *
   * We split the data type into two categories: Raw and Resolved editions.
@@ -91,17 +88,7 @@ trait Editions {
 object Editions {
 
   /** Represents a repository that provides libraries. */
-  case class Repository(name: String, url: URL)
-
-  object Repository {
-
-    /** A helper function that creates a Repository instance from a raw string
-      * URL.
-      */
-    def make(name: String, url: String): Try[Repository] = Try {
-      Repository(name, new URL(url))
-    }
-  }
+  case class Repository(name: String, url: String)
 
   /** Implements the Raw editions that can be directly parsed from a YAML
     * configuration.

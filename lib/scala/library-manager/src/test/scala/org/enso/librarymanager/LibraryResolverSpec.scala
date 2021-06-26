@@ -17,7 +17,7 @@ class LibraryResolverSpec
     with EitherValue
     with Inside {
   "LibraryResolver" should {
-    val mainRepo = Repository.make("main", "https://example.com/main").get
+    val mainRepo = Repository("main", "https://example.com/main")
     val parentEdition = Editions.Resolved.Edition(
       parent        = None,
       engineVersion = Some(DefaultEnsoVersion),
@@ -27,7 +27,7 @@ class LibraryResolverSpec
           .PublishedLibrary("Standard.Base", SemVer(4, 5, 6), mainRepo)
       )
     )
-    val customRepo = Repository.make("custom", "https://example.com/custom").get
+    val customRepo = Repository("custom", "https://example.com/custom")
     val currentEdition = Editions.Resolved.Edition(
       parent        = Some(parentEdition),
       engineVersion = None,

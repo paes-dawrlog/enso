@@ -6,12 +6,12 @@ import io.circe.{Decoder, DecodingFailure}
   *
   * The prefix is either a special prefix or a username.
   */
-case class LibraryName(prefix: String, name: String) {
+case class LibraryName(namespace: String, name: String) {
 
   /** The qualified name of the library consists of its prefix and name
     * separated with a dot.
     */
-  def qualifiedName: String = s"$prefix.$name"
+  def qualifiedName: String = s"$namespace.$name"
 
   /** @inheritdoc */
   override def toString: String = qualifiedName
