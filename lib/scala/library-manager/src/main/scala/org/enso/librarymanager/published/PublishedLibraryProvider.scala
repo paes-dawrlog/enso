@@ -5,6 +5,9 @@ import org.enso.editions.Editions.Repository
 import org.enso.editions.LibraryName
 import org.enso.librarymanager.{LibraryResolutionResult, LibraryVersion}
 
+import java.nio.file.Path
+import scala.util.Try
+
 /** A provider of published libraries.
   *
   * It usually should use some kind of a cache to keep already downloaded
@@ -23,5 +26,5 @@ trait PublishedLibraryProvider {
     version: SemVer,
     recommendedRepository: Repository,
     dependencyResolver: LibraryName => Option[LibraryVersion]
-  ): LibraryResolutionResult
+  ): Try[Path]
 }

@@ -1,15 +1,19 @@
 package org.enso.librarymanager
 
+import org.enso.cli.task.ProgressReporter
 import org.enso.distribution.DistributionManager
 import org.enso.editions.{Editions, LibraryName}
 import org.enso.librarymanager.local.LocalLibraryProvider
-import org.enso.librarymanager.published.{
-  DefaultPublishedLibraryProvider,
-  PublishedLibraryProvider
-}
+import org.enso.librarymanager.published.PublishedLibraryProvider
+
+import java.nio.file.Path
+import scala.util.Try
 
 /** A helper class for loading libraries. */
-case class LibraryLoader(distributionManager: DistributionManager) {
+case class LibraryLoader(
+  distributionManager: DistributionManager,
+  progressReporter: ProgressReporter
+) {
   private val localLibraryProvider =
     LocalLibraryProvider.make(distributionManager)
   private val resolver = LibraryResolver(localLibraryProvider)
@@ -25,7 +29,7 @@ case class LibraryLoader(distributionManager: DistributionManager) {
     libraryName: LibraryName,
     edition: Editions.ResolvedEdition,
     preferLocalLibraries: Boolean
-  ): LibraryResolutionResult = {
+  ): Try[Path] = {
     val resolvedVersion = resolver
       .resolveLibraryVersion(libraryName, edition, preferLocalLibraries)
     resolvedVersion match {
