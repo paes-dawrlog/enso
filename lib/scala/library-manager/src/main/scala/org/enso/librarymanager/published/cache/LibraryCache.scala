@@ -1,23 +1,42 @@
 package org.enso.librarymanager.published.cache
 
+import com.typesafe.scalalogging.Logger
 import nl.gn0s1s.bump.SemVer
-import org.enso.cli.task.ProgressReporter
 import org.enso.distribution.FileSystem.PathSyntax
+import org.enso.distribution.locking.{
+  LockType,
+  LockUserInterface,
+  ResourceManager
+}
 import org.enso.editions.{Editions, LibraryName}
 import org.enso.librarymanager.LibraryVersion
-import org.enso.librarymanager.published.PublishedLibraryProvider
+import org.enso.librarymanager.published.repository.RepositoryHelper.RepositoryMethods
+import org.enso.librarymanager.published.{
+  LibraryDownloader,
+  PublishedLibraryProvider
+}
 
 import java.nio.file.{Files, Path}
 import scala.util.Try
 
-class LibraryCache(root: Path, progressReporter: ProgressReporter)
-    extends PublishedLibraryProvider {
+class LibraryCache(
+  root: Path,
+  libraryDownloader: LibraryDownloader,
+  resourceManager: ResourceManager,
+  lockReporter: LockUserInterface
+) extends PublishedLibraryProvider {
+
+  private lazy val logger = Logger[LibraryCache]
 
   // TODO locks
   def getCachedLibrary(
     libraryName: LibraryName,
     version: SemVer
-  ): Option[Path] = {
+  ): Option[Path] = resourceManager.withResource(
+    lockReporter,
+    LibraryResource(libraryName, version),
+    LockType.Shared
+  ) {
     val path = LibraryCache.resolvePath(root, libraryName, version)
     if (Files.exists(path)) Some(path)
     else None
@@ -40,12 +59,47 @@ class LibraryCache(root: Path, progressReporter: ProgressReporter)
     }
   }
 
-  def installLibrary(
+  // TODO [RW] handling nested dependencies and possible version differences when preinstalling
+  private def installLibrary(
     libraryName: LibraryName,
     version: SemVer,
     repository: Editions.Repository,
     dependencyResolver: LibraryName => Option[LibraryVersion]
-  ): Try[Path] = ???
+  ): Path = {
+    logger.debug(s"Installing library $libraryName ($version).")
+    val libraryRoot = repository.resolveLibraryRoot(libraryName, version)
+    val manifest    = libraryDownloader.downloadManifest(libraryRoot)
+
+    for {
+      dependencyName    <- manifest.dependencies
+      dependencyVersion <- dependencyResolver(dependencyName)
+    } dependencyVersion match {
+      case LibraryVersion.Local =>
+      case LibraryVersion.Published(version, repository) =>
+        findLibrary(dependencyName, version, repository, dependencyResolver)
+    }
+
+    val path = LibraryCache.resolvePath(root, libraryName, version)
+    resourceManager.withResource(
+      lockReporter,
+      LibraryResource(libraryName, version),
+      LockType.Exclusive
+    ) {
+      if (Files.exists(path)) path
+      else {
+        installLibraryHelper(libraryName, version, repository, path)
+        path
+      }
+    }
+  }
+
+  // TODO make sure to use the tmp directory
+  private def installLibraryHelper(
+    libraryName: LibraryName,
+    version: SemVer,
+    repository: Editions.Repository,
+    destinationPath: Path
+  ): Unit = ???
 }
 
 object LibraryCache {

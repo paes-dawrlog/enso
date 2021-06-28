@@ -3,7 +3,7 @@ package org.enso.librarymanager.published
 import nl.gn0s1s.bump.SemVer
 import org.enso.editions.Editions.Repository
 import org.enso.editions.LibraryName
-import org.enso.librarymanager.{LibraryResolutionResult, LibraryVersion}
+import org.enso.librarymanager.LibraryVersion
 
 import java.nio.file.Path
 import scala.util.Try
