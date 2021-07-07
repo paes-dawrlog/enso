@@ -209,6 +209,39 @@ class EnsureCompiledJob(protected val files: Iterable[File])
     }
   }
 
+  private def extractListOfSuggestions(
+    module: Module,
+    changeset: Changeset[Rope]
+  )(implicit ctx: RuntimeContext): Unit = {
+    val moduleName = module.getName
+    ctx.executionService.getLogger
+      .log(
+        Level.FINEST,
+        s"Extracting list of suggestions from module $moduleName"
+      )
+    val prevSuggestions = SuggestionBuilder(changeset.source)
+      .build(moduleName, changeset.ir)
+      .filter {
+        case _: Suggestion.Local => false
+        case _                   => true
+      }
+    val newSuggestions = SuggestionBuilder(module.getLiteralSource)
+      .build(moduleName, module.getIr)
+      .filter {
+        case _: Suggestion.Local => false
+        case _                   => true
+      }
+    val diff    = SuggestionDiff.compute(prevSuggestions, newSuggestions)
+    val version = ctx.versioning.evalVersion(module.getLiteralSource.toString)
+    val notification = Api.SuggestionsDatabaseModuleUpdateNotification(
+      file    = new File(module.getPath),
+      version = version,
+      actions = Vector(),
+      updates = diff
+    )
+    sendModuleUpdate(notification)
+  }
+
   /** Extract compilation diagnostics from the module and send the diagnostic
     * updates.
     *
