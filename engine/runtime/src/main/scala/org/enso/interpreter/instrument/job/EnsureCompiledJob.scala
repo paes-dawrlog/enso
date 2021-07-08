@@ -561,3 +561,11 @@ object EnsureCompiledJob {
       }
 
 }
+
+case class SuggestionOrderEntry(
+  curr: Long,
+  prev: Option[Long],
+  next: Option[Long]
+) {}
+
+object SuggestionOrderEntry {}
