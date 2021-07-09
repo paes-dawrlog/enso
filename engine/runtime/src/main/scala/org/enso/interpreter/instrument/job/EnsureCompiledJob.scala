@@ -231,6 +231,9 @@ class EnsureCompiledJob(protected val files: Iterable[File])
         case _: Suggestion.Local => false
         case _                   => true
       }
+    val orderedSuggestions = prevSuggestions
+      .map(x => SuggestionOrderEntry(x.externalId.get.getMostSignificantBits))
+      .toVector
     val diff    = SuggestionDiff.compute(prevSuggestions, newSuggestions)
     val version = ctx.versioning.evalVersion(module.getLiteralSource.toString)
     val notification = Api.SuggestionsDatabaseModuleUpdateNotification(
@@ -564,8 +567,8 @@ object EnsureCompiledJob {
 
 case class SuggestionOrderEntry(
   curr: Long,
-  prev: Option[Long],
-  next: Option[Long]
+  prev: Option[Long] = None,
+  next: Option[Long] = None
 ) {}
 
 object SuggestionOrderEntry {}
